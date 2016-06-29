@@ -105,9 +105,9 @@ module WS2801
 		options[:pixel] = (0..(WS2801.length-1)).to_a if options[:pixel].nil? or options[:pixel] == :all
 		options[:pixel] = [options[:pixel]] if options[:pixel].is_a? Numeric
 		options[:pixel].each do |i|
-			@@options[:strip][(i*3)]   = options[:r] || 0
-			@@options[:strip][(i*3)+1] = options[:g] || 0
-			@@options[:strip][(i*3)+2] = options[:b] || 0
+			@@options[:strip][i*3]   = options[:r] || 0
+			@@options[:strip][i*3+1] = options[:g] || 0
+			@@options[:strip][i*3+2] = options[:b] || 0
 		end
 		WS2801.write if @@options[:autowrite]
 	end
@@ -133,30 +133,26 @@ module WS2801
 		options[:g] = 0 if options[:g].nil?
 		options[:b] = 0 if options[:b].nil?
 
+		change_led = -> (which, goal) {
+			if @@options[:strip][which] > goal
+				@@options[:strip][which] -= 1
+			elsif @@options[:strip][which] < goal
+				@@options[:strip][which] += 1
+			end
+		}
+
 		while true
 			options[:pixel].each do |i|
-				#next if @@options[:strip][(i*3+2)] == options[:b] and @@options[:strip][(i*3+1)] == options[:g] and @@options[:strip][(i*3)] == options[:r]
-				if @@options[:strip][(i*3)]   > options[:r]
-					@@options[:strip][(i*3)]   -= 1
-				elsif @@options[:strip][(i*3)]   < options[:r]
-					@@options[:strip][(i*3)]   += 1
-				end
-				if @@options[:strip][(i*3+1)] > options[:g]
-					@@options[:strip][(i*3+1)] -= 1 
-				elsif @@options[:strip][(i*3+1)] < options[:g]
-					@@options[:strip][(i*3+1)] += 1
-				end 
-				if @@options[:strip][(i*3+2)] > options[:b]
-					@@options[:strip][(i*3+2)] -= 1
-				elsif @@options[:strip][(i*3+2)] < options[:b]
-					@@options[:strip][(i*3+2)] -= 1
-				end
+				change_led.call(i*3,   options[:r])
+				change_led.call(i*3+1, options[:g])
+				change_led.call(i*3+2, options[:b])
 			end
-			(breakme = true; break) if @@options[:strip][(i*3+2)] == options[:b] and @@options[:strip][(i*3+1)] == options[:g] and 
-@@options[:strip][(i*3)] == 
-options[:r]
+
 			WS2801.write if @@options[:autowrite]
-			break if breakme
+
+			break  if @@options[:strip][(WS2801.length-1)*3]   == options[:r] and
+								@@options[:strip][(WS2801.length-1)*3+1] == options[:g] and
+								@@options[:strip][(WS2801.length-1)*3+2] == options[:b]
 
 			sleep(options[:timeout] || 0.01)
 		end
