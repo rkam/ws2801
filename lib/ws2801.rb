@@ -167,7 +167,11 @@ module WS2801
 	# Arguments:
 	#  pixel - Pixel id
 	def self.get pixel
-		[@@options[:strip][pixel*3], @@options[:strip][pixel*3+1], @@options[:strip][pixel*3+2]]
+    pixel = pixel[:pixel] if pixel.is_a? Hash
+		return @@options[:strip] if     pixel == :all
+		return nil               unless pixel.is_a? Numeric
+
+		[ @@options[:strip][pixel*3], @@options[:strip][pixel*3+1], @@options[:strip][pixel*3+2] ]
 	end
 
 	# Set off
