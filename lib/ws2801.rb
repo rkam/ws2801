@@ -68,7 +68,7 @@ module WS2801
 	# Example:
 	#	 >> WS2801.generate
 	def self.generate
-		@@options[:strip] = Array.new(@@options[:len]*3+1) { 0 }
+		@@options[:strip] = Array.new(@@options[:len]*3) { 0 }
 	end
 
 	# Write colors to the device
@@ -81,11 +81,39 @@ module WS2801
 	
 		@@options[:strip].each_with_index do |s,i|
 			@@options[:strip][i] = 0 if @@options[:strip][i].nil?
-		end
+			end
 
 		File.open(@@options[:device], 'w') do |file|
 			file.write(@@options[:strip].pack('C*'))
 		end
+	end
+
+	def self._write
+		return false if @@options[:strip].nil?
+	
+    all_off = true
+		@@options[:strip].each_with_index do |s,i|
+			@@options[:strip][i] = 0 if @@options[:strip][i].nil?
+			all_off = false if @@options[:strip][i] != 0
+		end
+
+		yield all_off
+	end
+
+	def self.dump
+    self._write do |all_off|
+      if all_off
+        puts "## OFF ##"
+        return
+      end
+      @@options[:strip].each_slice(3) do |p|
+        if p[0] + p[1] + p[2] == 0
+          puts "off"
+          next
+        end
+        ap [ p[0], p[1], p[2] ], multiline: false
+      end
+    end
 	end
 
 	# Set pixel to color
